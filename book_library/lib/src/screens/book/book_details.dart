@@ -4,10 +4,11 @@ import 'package:book_library/src/widgets/book_cover.dart';
 import 'package:flutter/material.dart';
 import 'package:book_library/src/models/book.dart';
 import 'package:flutter_range_slider/flutter_range_slider.dart' as frs;
+import 'package:toast/toast.dart';
 
 class BookDetails extends StatelessWidget {
   final Book _book;
-
+  var paginasSeleccionadas = 11;
   BookDetails(Book book) : _book = book;
 
   @override
@@ -118,22 +119,44 @@ class BookDetails extends StatelessWidget {
                 divisions: _book.numberPages,
                 showValueIndicator: true,
                 valueIndicatorMaxDecimals: 0,
-                onChanged: (double newLowerValue, double newUpperValue) {},
-                onChangeStart:
-                    (double startLowerValue, double startUpperValue) {
-                  pdf.start = startLowerValue.toInt();
-                  pdf.end = startUpperValue.toInt();
+                onChanged: (double newLowerValue, double newUpperValue) {
+                  pdf.start = newLowerValue.round();
+                  pdf.end = newUpperValue.round();
+                  paginasSeleccionadas =
+                      pdf.end - (pdf.start == 1 ? 0 : pdf.start);
+                  Toast.show(
+                    "$paginasSeleccionadas/10",
+                    context,
+                    duration: Toast.LENGTH_SHORT,
+                    gravity: Toast.CENTER,
+                  );
                   print('inicio ${pdf.start} fin ${pdf.end}');
-                },
-                onChangeEnd: (double newLowerValue, double newUpperValue) {
-                  pdf.start = newLowerValue.toInt();
-                  pdf.end = newUpperValue.toInt();
-                  //print('Ended with values: $newLowerValue and $newUpperValue');
                 },
               ),
               Center(
                 child: RaisedButton(
-                  onPressed: () => {pdf.sacarPdf()},
+                  onPressed: () {
+                    paginasSeleccionadas < 11
+                        ? pdf.sacarPdf()
+                        : showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text("No se puede descargar"),
+                                content: Text(
+                                  "Seleccionadas $paginasSeleccionadas de 10 páginas.",
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .caption
+                                          .color
+                                          .withOpacity(0.85),
+                                      fontFamily: 'Nunito',
+                                      fontSize: 16.0),
+                                ),
+                              );
+                            });
+                  },
                   padding: EdgeInsets.all(10.0),
                   child: Column(
                     // Replace with a Row for horizontal icon + text
